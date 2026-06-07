@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <defs>
+    <linearGradient id="amber" x1="0" y1="0" x2="0" y2="100" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffd36b"/>
+      <stop offset="1" stop-color="#ff7a18"/>
+    </linearGradient>
+  </defs>
+  <g stroke="url(#amber)" stroke-width="11.5" stroke-linecap="round">
+    <line x1="14.9" y1="88.5" x2="55.1" y2="5.5"/>   <!-- bottom-left -> apex (overshot) -->
+    <line x1="44.9" y1="5.5"  x2="85.1" y2="88.5"/>  <!-- apex -> bottom-right (overshot) -->
+    <line x1="9.8"  y1="78"   x2="90.2" y2="78"/>    <!-- bottom (overshot) -->
+  </g>
+  <path d="M50 45 L40 62 L60 62 Z" fill="url(#amber)"/>
+</svg>

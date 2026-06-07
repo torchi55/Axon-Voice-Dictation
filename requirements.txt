@@ -1,0 +1,11 @@
+PyQt6>=6.6.0
+faster-whisper>=1.0.3
+sounddevice>=0.4.6
+numpy>=1.24.0
+pynput>=1.7.6
+pyperclip>=1.8.2
+pynvml>=12.0.0
+# NOTE: torch is intentionally NOT a dependency. faster-whisper's CTranslate2
+# backend does not use torch for inference; VRAM is read via pynvml (NVML).
+# The dev venv may still have torch installed for other tools — that's fine,
+# this project's code must never import it.

@@ -1,0 +1,34 @@
+﻿# PyInstaller build output (332 MB)
+dist/
+build/
+
+# Inno Setup installer output (89 MB)
+build-dist/Output/
+
+# Build venv
+.venv-build/
+venv/
+.venv/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# PyInstaller work files (axon.spec is source, keep it)
+*.spec.bak
+
+# Logs (written to %APPDATA% at runtime)
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Firecrawl cache
+.firecrawl/
