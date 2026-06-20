@@ -5,19 +5,31 @@ Snippets run LAST so filler-stripping never mutates an expansion.
 
 Filler Cleanup is conservative and OFF by default:
   - `um` / `uh` (and variants) are stripped globally — they are never real words.
-  - `like` / `you know` are stripped ONLY in interjection position (set off by a
-    clause boundary and a following comma / end), so "I like coffee" and
-    "looks like rain" are untouched.
+  - `like` / `you know` / `I mean` are stripped ONLY in interjection position (set
+    off by a clause boundary and a following comma / end).
+  - `you know what I mean` is stripped globally — it is never content.
+  - `does that make sense` / `so yeah` are stripped only at the end of the utterance.
+  - `right` is stripped only when it follows a comma at the end (", right").
 """
 import re
 
 # Standalone disfluencies — safe to strip anywhere.
 _UM_UH = re.compile(r"\b(?:u+m+|u+h+|er+m+|hm+)\b[,.]?", re.IGNORECASE)
 
-# Interjection "like" / "you know": a clause boundary (start / , . ! ? ; :),
+# Whole-phrase fillers safe to strip anywhere in the utterance.
+_GLOBAL = re.compile(r"\byou know what I mean\b[,.]?", re.IGNORECASE)
+
+# Sentence-ender fillers — only stripped at the very end of the utterance.
+# "right" only when preceded by a comma (", right") — bare "right" is ambiguous.
+_ENDERS = re.compile(
+    r"(?:[,.]?\s*\b(?:does that make sense\??|so yeah)\b[?!.]?|,\s*\bright\b[?!.]?)\s*$",
+    re.IGNORECASE,
+)
+
+# Interjection "like" / "you know" / "I mean": a clause boundary (start / , . ! ? ; :),
 # the filler, then a following comma or end-of-string. Keeps the boundary char.
 _INTERJ = re.compile(
-    r"(^|[,.!?;:])\s*(?:like|you know)\s*(?=,|$)",
+    r"(^|[,.!?;:])\s*(?:like|you know|I mean)\s*(?=,|$)",
     re.IGNORECASE,
 )
 
@@ -32,6 +44,8 @@ def _tidy(text: str) -> str:
 
 def apply_filler_cleanup(text: str) -> str:
     text = _UM_UH.sub("", text)
+    text = _GLOBAL.sub("", text)
+    text = _ENDERS.sub("", text)
     text = _INTERJ.sub(r"\1", text)
     return _tidy(text)
 

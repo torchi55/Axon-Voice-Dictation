@@ -7,7 +7,7 @@
 ; (Install Inno Setup 6 first:  winget install JRSoftware.InnoSetup)
 
 #define AppName "Axon Voice"
-#define AppVersion "1.0.0"
+#define AppVersion "1.1.0"
 #define AppPublisher "Theo Janeway"
 #define AppURL "https://theojaneway.com"
 #define AppExeName "AxonVoice.exe"

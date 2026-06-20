@@ -8,6 +8,19 @@ BLOCK_SIZE = 1024
 MIN_DURATION_S = 0.3          # discard recordings shorter than this
 
 
+def _log_default_device() -> None:
+    """Log the active Windows default input device once at startup."""
+    try:
+        from .logging_setup import get_logger
+        log = get_logger()
+        idx = sd.default.device[0]  # (input, output) tuple
+        devs = sd.query_devices()
+        name = devs[idx]["name"] if 0 <= idx < len(devs) else f"idx={idx}"
+        log.info("Default audio input: [%d] %s", idx, name)
+    except Exception as e:
+        print(f"[Axon] Could not query audio devices: {e}")
+
+
 class AudioRecorder:
     def __init__(self):
         self._recording = False
@@ -17,6 +30,7 @@ class AudioRecorder:
         self._stream: sd.InputStream | None = None
         self._win_cache: dict[int, np.ndarray] = {}
         self._band_cache: dict[tuple[int, int], list[np.ndarray]] = {}
+        _log_default_device()
 
     def _teardown_stream(self) -> None:
         """Stop + close the current stream (if any) and drop the reference."""

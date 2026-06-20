@@ -469,6 +469,62 @@ def _fmt_duration(seconds: float) -> str:
     return f"{s // 60}m {s % 60:02d}s"
 
 
+class _EditableBody(QWidget):
+    """History card body. Looks like a label; click it to edit; focus-out saves."""
+
+    def __init__(self, text: str, on_save):
+        super().__init__()
+        self._on_save = on_save
+        lay = QVBoxLayout(self)
+        lay.setContentsMargins(0, 0, 0, 0)
+        lay.setSpacing(0)
+
+        self._lbl = QLabel(text)
+        self._lbl.setWordWrap(True)
+        self._lbl.setCursor(Qt.CursorShape.IBeamCursor)
+        self._lbl.setStyleSheet(
+            f"font-size: 13.5px; color: {TEXT}; background: transparent;"
+        )
+        lay.addWidget(self._lbl)
+
+        self._ed = QPlainTextEdit(text)
+        self._ed.setStyleSheet(
+            f"QPlainTextEdit {{ background: rgba(255,255,255,0.07); "
+            f"border: 1px solid {SIGNAL}; border-radius: 8px; "
+            f"padding: 4px 8px; font-size: 13.5px; color: {TEXT}; }}"
+        )
+        self._ed.hide()
+        lay.addWidget(self._ed)
+
+        # Install AFTER both widgets exist so eventFilter never fires mid-init.
+        self._lbl.installEventFilter(self)
+        self._ed.installEventFilter(self)
+
+    def eventFilter(self, obj, ev) -> bool:
+        if obj is self._lbl and ev.type() == QEvent.Type.MouseButtonPress:
+            self._start_edit()
+            return True
+        if obj is self._ed and ev.type() == QEvent.Type.FocusOut:
+            self._commit()
+        return False
+
+    def _start_edit(self) -> None:
+        self._ed.setPlainText(self._lbl.text())
+        self._lbl.hide()
+        self._ed.show()
+        self._ed.setFocus()
+        cur = self._ed.textCursor()
+        cur.movePosition(cur.MoveOperation.End)
+        self._ed.setTextCursor(cur)
+
+    def _commit(self) -> None:
+        text = self._ed.toPlainText()
+        self._lbl.setText(text)
+        self._ed.hide()
+        self._lbl.show()
+        self._on_save(text)
+
+
 # ---------------------------------------------------------------------- #
 # History
 # ---------------------------------------------------------------------- #
@@ -532,20 +588,21 @@ class HistoryTab(QWidget):
         # Rebuild persisted entries (newest first → append top-to-bottom).
         for e in self._entries:
             self._empty.hide()
-            self._list.addWidget(self._make_card(e["text"], e["ts"], e.get("duration", 0.0)))
+            self._list.addWidget(self._make_card(e))
 
     def add_entry(self, text: str, duration: float = 0.0) -> None:
         self._empty.hide()
-        ts = time.time()
-        self._entries.insert(0, {"text": text, "ts": ts, "duration": float(duration)})
-        self._save_fn(self._entries)               # persist + prune >24h
-        self._list.insertWidget(0, self._make_card(text, ts, duration))
+        entry = {"text": text, "ts": time.time(), "duration": float(duration)}
+        self._entries.insert(0, entry)
+        self._save_fn(self._entries)
+        self._list.insertWidget(0, self._make_card(entry))
 
-    def _make_card(self, text: str, ts: float, duration: float) -> QFrame:
+    def _make_card(self, entry: dict) -> QFrame:
+        text = entry["text"]
+        ts = entry["ts"]
+        duration = entry.get("duration", 0.0)
         when = QDateTime.fromSecsSinceEpoch(int(ts)).toString("MMM d  h:mm AP")
         card = QFrame()
-        # Flat, even translucent panel — NO top-sheen gradient or rim. Those read
-        # as a hard "box around the time" on short entries (Theo's complaint).
         card.setStyleSheet(
             "QFrame { background: rgba(255,255,255,0.045); border: none; border-radius: 14px; }"
         )
@@ -561,15 +618,17 @@ class HistoryTab(QWidget):
         copy_btn = QPushButton("Copy")
         copy_btn.setFixedSize(60, 26)
         copy_btn.setStyleSheet("font-size: 11px; padding: 0;")
-        _t = text
-        copy_btn.clicked.connect(lambda: self._copy(copy_btn, _t))
+        copy_btn.clicked.connect(lambda: self._copy(copy_btn, entry["text"]))
         top.addWidget(copy_btn)
         cl.addLayout(top)
 
-        body = QLabel(text)
-        body.setWordWrap(True)
-        body.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
-        body.setStyleSheet(f"font-size: 13.5px; color: {TEXT}; background: transparent; line-height: 140%;")
+        def _on_body_save(new_text: str) -> None:
+            entry["text"] = new_text
+            copy_btn.clicked.disconnect()
+            copy_btn.clicked.connect(lambda: self._copy(copy_btn, entry["text"]))
+            self._save_fn(self._entries)
+
+        body = _EditableBody(text, _on_body_save)
         cl.addWidget(body)
         return card
 
@@ -597,7 +656,7 @@ class HistoryTab(QWidget):
         if self._entries:
             self._empty.hide()
             for e in self._entries:
-                self._list.addWidget(self._make_card(e["text"], e["ts"], e.get("duration", 0.0)))
+                self._list.addWidget(self._make_card(e))
         else:
             self._empty.show()
 
@@ -867,7 +926,7 @@ class SettingsTab(QWidget):
         self._learn_btn.clicked.connect(self._toggle_model_info)
         model_head.addWidget(self._learn_btn, 0, Qt.AlignmentFlag.AlignVCenter)
         root.addLayout(model_head)
-        self._model_choices = ["auto"] + MODEL_ORDER
+        self._model_choices = ["auto", "tiny", "small", "large-v3"]
         self._model_combo = IconComboBox()
         # Resolve Auto lazily, the instant the user opens the list.
         self._model_combo.on_popup = self._resolve_auto

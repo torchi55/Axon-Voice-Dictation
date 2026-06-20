@@ -24,7 +24,7 @@
 
 **Snippet** — A user-defined keyword → text mapping. Applied to the cleaned Whisper output: any occurrence of a Snippet keyword is replaced with its expansion. Snippet expansion is the last pipeline stage, so filler-stripping never mutates an expansion. Defined in the Snippets tab of the Main Window.
 
-**Filler Cleanup** — An optional pipeline stage, default off, applied after Whisper and before Snippet expansion. Removes interjection fillers (`um`, `uh`, and `like`/`you know` only in interjection position, never inside legitimate phrases). Toggleable per-session.
+**Filler Cleanup** — An optional pipeline stage, default off, applied after Whisper and before Snippet expansion. Strips disfluencies and conversational fillers conservatively: `um`/`uh` globally; `like`/`you know`/`I mean` only in interjection position; `you know what I mean` globally; `does that make sense`/`so yeah`/`right` only at the end of an utterance. Never strips inside legitimate phrases. Toggleable per-session.
 
 **Output** — The act of inserting a Transcript into the focused application. Always does two things: (1) inserts at the cursor (paste-first, with a type fallback for apps that block paste), (2) leaves the Transcript on the clipboard so it can be re-pasted. The prior clipboard contents are not preserved.
 
