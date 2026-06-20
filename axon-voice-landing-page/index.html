@@ -252,6 +252,29 @@
   .specs{display:flex;gap:14px 26px;justify-content:center;flex-wrap:wrap;margin-top:26px;font-family:var(--mono);font-size:12.5px;color:var(--secondary)}
   .specs i{color:var(--copper);font-style:normal}
 
+  /* ===== SmartScreen modal ===== */
+  .modal-backdrop{position:fixed;inset:0;z-index:900;background:rgba(0,0,0,.55);backdrop-filter:blur(6px);
+    display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .22s}
+  .modal-backdrop.open{opacity:1;pointer-events:all}
+  .modal{max-width:420px;width:100%;border-radius:18px;padding:30px 28px 24px;
+    background:linear-gradient(180deg,rgba(255,255,255,.10) 0%,rgba(16,14,18,.82) 100%);
+    border:1px solid var(--border);border-top:1px solid var(--rim);backdrop-filter:blur(28px);
+    box-shadow:0 32px 80px rgba(0,0,0,.7);transform:translateY(14px);transition:transform .25s cubic-bezier(.22,1,.36,1)}
+  .modal-backdrop.open .modal{transform:none}
+  .modal-icon{font-size:28px;margin-bottom:12px}
+  .modal h3{font-size:19px;font-weight:680;letter-spacing:-.01em;margin-bottom:8px}
+  .modal p{font-size:14px;color:var(--secondary);line-height:1.6;margin-bottom:14px}
+  .modal .step{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border-radius:11px;
+    background:rgba(255,255,255,.04);border:1px solid var(--border);margin-bottom:10px}
+  .modal .step .num{font-family:var(--mono);font-size:11px;color:var(--copper);background:rgba(255,122,26,.12);
+    border:1px solid var(--border-strong);border-radius:6px;padding:3px 8px;flex-shrink:0;margin-top:1px}
+  .modal .step p{margin:0;font-size:13.5px;color:var(--text)}
+  .modal .step p b{color:var(--copper)}
+  .modal-close{width:100%;margin-top:18px;padding:12px;border-radius:11px;font-family:var(--mono);font-size:13px;
+    font-weight:600;color:var(--text);background:rgba(255,255,255,.06);border:1px solid var(--border);cursor:pointer;transition:border-color .15s}
+  .modal-close:hover{border-color:var(--border-strong)}
+  .modal-note{font-family:var(--mono);font-size:11.5px;color:var(--muted);text-align:center;margin-top:14px;line-height:1.5}
+
   /* ===== footer ===== */
   footer{border-top:1px solid var(--border);padding:40px 0 34px;color:var(--muted);font-size:13px;position:relative;z-index:var(--z-base)}
   .backrow{text-align:center;margin-bottom:30px}
@@ -300,7 +323,7 @@
       <a href="#tour">The app</a>
       <a href="#features">Features</a>
       <a href="#compare">Why Axon</a>
-      <a class="btn" href="https://github.com/torchi55/Axon-Voice-Dictation/releases/latest/download/AxonVoice-Setup-1.0.0.exe" target="_blank" rel="noopener">Download</a>
+      <a class="btn" href="https://github.com/torchi55/Axon-Voice-Dictation/releases/latest/download/AxonVoice-Setup-1.1.0.exe" target="_blank" rel="noopener">Download</a>
     </div>
   </nav>
 </header>
@@ -309,12 +332,12 @@
 
 <!-- ===== hero ===== -->
 <section class="hero wrap">
-  <span class="pill"><span class="dot"></span> 100% LOCAL · 100% FREE · WINDOWS</span>
+  <span class="pill"><span class="dot"></span> 100% LOCAL · 100% FREE · WINDOWS · v1.1.0</span>
   <h1>Speak. It types.<br><span class="hl">Nothing leaves your PC.</span></h1>
   <p class="sub">Axon Voice sits in your tray, listens while you hold a key, and drops clean text
     into whatever app you're already in. No account, no API key, no cloud.</p>
   <div class="cta-row">
-    <a class="btn" href="https://github.com/torchi55/Axon-Voice-Dictation/releases/latest/download/AxonVoice-Setup-1.0.0.exe" target="_blank" rel="noopener">↓ Download for Windows</a>
+    <a class="btn" href="https://github.com/torchi55/Axon-Voice-Dictation/releases/latest/download/AxonVoice-Setup-1.1.0.exe" target="_blank" rel="noopener">↓ Download for Windows</a>
     <a class="btn ghost" href="#tour">See the app</a>
   </div>
   <p class="cta-note">Free forever · <b>runs offline</b> · your voice never touches a server</p>
@@ -552,15 +575,36 @@
     <h2>Get Axon Voice for Windows</h2>
     <p class="lead">Free download. Install, hold a key, start talking. The first launch grabs the right
       Whisper model for your machine automatically.</p>
-    <a class="btn" href="https://github.com/torchi55/Axon-Voice-Dictation/releases/latest/download/AxonVoice-Setup-1.0.0.exe" target="_blank" rel="noopener" style="font-size:16px;padding:15px 30px">↓ Download for Windows</a>
+    <!-- Points at the latest GitHub Release; auto-serves the .exe once `gh release create` is run. -->
+    <a class="btn" href="https://github.com/torchi55/Axon-Voice-Dictation/releases/latest/download/AxonVoice-Setup-1.1.0.exe" target="_blank" rel="noopener" style="font-size:16px;padding:15px 30px">↓ Download for Windows</a>
     <div class="specs">
       <span><i>●</i> Windows 10 / 11</span>
       <span><i>●</i> No account</span>
       <span><i>●</i> Works offline</span>
       <span><i>●</i> NVIDIA GPU optional — CPU works too</span>
+      <span><i>○</i> Mac — coming soon</span>
     </div>
   </div>
 </section>
+
+<!-- ===== SmartScreen modal ===== -->
+<div class="modal-backdrop" id="smartscreen-modal" role="dialog" aria-modal="true" aria-label="Windows security prompt">
+  <div class="modal">
+    <div class="modal-icon">🛡️</div>
+    <h3>Windows will warn you first</h3>
+    <p>Axon isn't signed with a corporate certificate yet — so Windows flags it as "Unknown publisher." It's not a virus. Here's how to get past it in two clicks:</p>
+    <div class="step">
+      <span class="num">01</span>
+      <p>When you see <b>"Windows protected your PC"</b>, click <b>More info</b> (small text under the warning)</p>
+    </div>
+    <div class="step">
+      <span class="num">02</span>
+      <p>A <b>"Run anyway"</b> button appears at the bottom. Click it. That's it.</p>
+    </div>
+    <button class="modal-close" id="modal-close-btn">Got it — start download</button>
+    <p class="modal-note">100% local · zero telemetry · open source on GitHub</p>
+  </div>
+</div>
 
 <footer class="wrap">
   <div class="backrow"><a class="backlink" href="https://theojaneway.com">← Back to theojaneway.com</a></div>
@@ -572,6 +616,43 @@
 
 <script>
 (function(){
+  var DL_URL = 'https://github.com/torchi55/Axon-Voice-Dictation/releases/latest/download/AxonVoice-Setup-1.1.0.exe';
+  var modal = document.getElementById('smartscreen-modal');
+  var closeBtn = document.getElementById('modal-close-btn');
+
+  function openModal(e){
+    e.preventDefault();
+    modal.classList.add('open');
+    closeBtn.focus();
+  }
+  function closeModal(){
+    modal.classList.remove('open');
+    /* trigger the actual download */
+    var a = document.createElement('a');
+    a.href = DL_URL;
+    a.download = 'AxonVoice-Setup-1.1.0.exe';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+
+  /* intercept every download button */
+  document.querySelectorAll('a[href*="AxonVoice-Setup"]').forEach(function(btn){
+    btn.addEventListener('click', openModal);
+  });
+
+  closeBtn.addEventListener('click', closeModal);
+
+  /* close on backdrop click */
+  modal.addEventListener('click', function(e){
+    if(e.target === modal) closeModal();
+  });
+
+  /* close on Escape */
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'Escape' && modal.classList.contains('open')) closeModal();
+  });
+
   var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   /* ---- tab switching ---- */
