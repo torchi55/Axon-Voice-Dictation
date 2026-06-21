@@ -232,7 +232,6 @@ class Transcriber:
                 language="en",
                 beam_size=5,
                 vad_filter=True,
-                vad_parameters={"threshold": 0.2, "min_silence_duration_ms": 500},
                 initial_prompt=initial_prompt,
             )
             total = max(float(getattr(info, "duration", 0.0)) or 0.0, 1e-6)
