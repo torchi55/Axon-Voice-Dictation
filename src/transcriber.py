@@ -9,6 +9,10 @@ import threading
 
 import numpy as np
 
+from .logging_setup import get_logger
+
+_log = get_logger()
+
 SAMPLE_RATE = 16_000
 
 # Model size ordering, smallest → largest. Used for CPU clamping and overrides.
@@ -154,11 +158,18 @@ class Transcriber:
                 model = WhisperModel(
                     self._path, device="cuda", compute_type="int8_float16"
                 )
+                # The GPU can be detected yet unusable (e.g. cublas64_12.dll
+                # missing): the load succeeds, the first decode raises, and a
+                # later decode HANGS the worker. One tiny decode proves it works.
+                segs, _ = model.transcribe(
+                    np.zeros(SAMPLE_RATE, dtype=np.float32), language="en",
+                    beam_size=1, temperature=0.0, without_timestamps=True)
+                list(segs)
                 self._device = "cuda"
                 self._finish(model, self._name)
                 return
             except Exception as e:
-                print(f"[Axon] CUDA load failed ({e}); falling back to CPU")
+                _log.warning("CUDA unusable (%s); falling back to CPU", e)
 
         # CPU path: clamp model size, fetching the clamped Model if it differs.
         # The whole branch (incl. the download) is inside the try so a fetch or
@@ -180,13 +191,13 @@ class Transcriber:
             self._finish(model, cpu_name)
         except Exception as e:
             self._load_error = str(e)
-            print(f"[Axon] Model load failed: {e}")
+            _log.error("Model load failed: %s", e)
 
     def _finish(self, model, name: str) -> None:
         with self._model_lock:
             self._model = model
         self._ready.set()
-        print(f"[Axon] Model ready: {name} on {self._device}")
+        _log.info("model ready: %s on %s", name, self._device)
 
     @property
     def resolved_model(self) -> str:
@@ -220,7 +231,7 @@ class Transcriber:
             # silently lose an early dictation, wait briefly for the load to
             # finish (success sets _ready). Bail fast if the load already failed.
             if self._load_error or not self._ready.wait(timeout=60.0):
-                print("[Axon] Model not ready (load slow or failed); clip dropped")
+                _log.warning("model not ready (load slow or failed); clip dropped")
                 return ""
             with self._model_lock:
                 model = self._model
@@ -244,5 +255,5 @@ class Transcriber:
                 progress_cb(1.0)
             return " ".join(parts).strip()
         except Exception as e:
-            print(f"[Axon] Transcription error: {e}")
+            _log.error("transcription error: %s", e)
             return ""
