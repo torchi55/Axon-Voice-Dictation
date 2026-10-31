@@ -46,6 +46,19 @@ def _clamp_model(name: str, ceiling: str) -> str:
     return name if _model_rank(name) <= _model_rank(ceiling) else ceiling
 
 
+def _add_cuda_dll_dirs() -> None:
+    """Let CTranslate2 find pip-installed CUDA DLLs (nvidia-cublas-cu12 puts
+    cublas64_12.dll in site-packages/nvidia/cublas/bin, which isn't on the
+    DLL search path by default)."""
+    import glob
+    import os
+    import site
+    for sp in site.getsitepackages():
+        for bin_dir in glob.glob(os.path.join(sp, "nvidia", "*", "bin")):
+            os.add_dll_directory(bin_dir)
+            os.environ["PATH"] = bin_dir + os.pathsep + os.environ.get("PATH", "")
+
+
 def cuda_available() -> bool:
     """True if CTranslate2 sees at least one CUDA device (no torch needed).
 
@@ -60,6 +73,7 @@ def cuda_available() -> bool:
     if getattr(sys, "frozen", False):
         return False
     try:
+        _add_cuda_dll_dirs()
         import ctranslate2
         return ctranslate2.get_cuda_device_count() > 0
     except Exception:
